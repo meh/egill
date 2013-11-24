@@ -49,6 +49,16 @@ SOURCES = FileList['source/*.c', 'source/data/*.c']
 	end
 }
 
+ENV['PATH'].split(?:).each {|path|
+	bin = "#{path}/X"
+
+	if File.executable?(bin)
+		CFLAGS << " -DXWAYLAND_PATH='#{bin.inspect}'"
+
+		break
+	end
+}
+
 if ENV['type'] == 'debug'
 	CFLAGS << " -g -O0"
 else

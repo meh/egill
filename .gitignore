@@ -1,0 +1,6 @@
+*.o
+.config
+mkmf.log
+libegill.so
+libegill-static.so
+test
