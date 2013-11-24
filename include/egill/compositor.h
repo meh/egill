@@ -21,6 +21,7 @@
 #define EGILL_COMPOSITOR_H
 
 #include <egill/common.h>
+#include <egill/process.h>
 
 EL_ENUM(compositor_state) {
 	EL_COMPOSITOR_ACTIVE,
@@ -43,6 +44,8 @@ EL_CLASS(compositor) {
 	struct el_backend*  backend;
 
 	el_compositor_state_e state;
+
+	wl_list processes;
 };
 
 /*!
@@ -72,5 +75,7 @@ void el_compositor_destroy (el_compositor_t self);
  * \memberof el_compositor_t
  */
 bool el_compositor_run (el_compositor_t self);
+
+void el_compositor_watch_process (el_compositor_t self, el_process_t process);
 
 #endif
