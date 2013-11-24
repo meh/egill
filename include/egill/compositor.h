@@ -21,6 +21,7 @@
 #define EGILL_COMPOSITOR_H
 
 #include <egill/common.h>
+#include <egill/xwayland.h>
 #include <egill/process.h>
 
 EL_ENUM(compositor_state) {
@@ -44,6 +45,8 @@ EL_CLASS(compositor) {
 	struct el_backend*  backend;
 
 	el_compositor_state_e state;
+
+	el_xwayland_t xwayland;
 
 	wl_list processes;
 };
