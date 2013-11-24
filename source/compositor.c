@@ -65,7 +65,77 @@ el_compositor_destroy (el_compositor_t self)
 		wl_display_destroy(self->display);
 	}
 
+	if (self->xwayland) {
+		xwayland_stop(self->xwayland);
+	}
+
 	el_destroy(self);
+}
+
+WL_EXPORT bool
+el_compositor_define_renderer (el_compositor_t self, const char* name, ...)
+{
+	va_list       args;
+	el_renderer_t renderer;
+
+	va_start(args, name);
+	renderer = el_renderer_create(self, name, args);
+	va_end(args);
+
+	if (renderer == NULL) {
+		return false;
+	}
+
+	self->renderer = renderer;
+
+	return true;
+}
+
+WL_EXPORT bool
+el_compositor_define_backend (el_compositor_t self, const char* name, ...)
+{
+	va_list       args;
+	el_backend_t backend;
+
+	va_start(args, name);
+	backend = el_backend_create(self, name, args);
+	va_end(args);
+
+	if (backend == NULL) {
+		return false;
+	}
+
+	self->backend = backend;
+
+	return true;
+}
+
+WL_EXPORT bool
+el_compositor_run (el_compositor_t self)
+{
+	if (!self->renderer) {
+		if (!el_compositor_define_renderer(self, NULL, NULL)) {
+			return false;
+		}
+	}
+
+	if (!self->backend) {
+		if (!el_compositor_define_backend(self, NULL, NULL)) {
+			return false;
+		}
+	}
+
+	setenv("WAYLAND_DISPLAY", self->socket, 1);
+
+	self->xwayland = xwayland_start(self);
+
+	if (!self->xwayland) {
+		return false;
+	}
+
+	wl_display_run(self->display);
+
+	return true;
 }
 
 WL_EXPORT void

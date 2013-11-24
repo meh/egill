@@ -73,6 +73,23 @@ el_compositor_t el_compositor_create (const char* socket);
 void el_compositor_destroy (el_compositor_t self);
 
 /*!
+ * Create and set the renderer to use in the compositor.
+ *
+ * \return true when the creation was successful, false otherwise
+ *
+ * \memberof el_compositor_t
+ */
+bool el_compositor_define_renderer (el_compositor_t self, const char* name, ...);
+
+/*!
+ * Create and set the backend to use in the compositor.
+ *
+ * \return true when the creation was successful, false otherwise
+ * \memberof el_compositor_t
+ */
+bool el_compositor_define_backend (el_compositor_t self, const char* name, ...);
+
+/*!
  * Run the compositor, this function will block and run the event loop.
  *
  * \memberof el_compositor_t
