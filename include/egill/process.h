@@ -29,7 +29,7 @@ EL_INTERFACE(process_cleanup) {
 };
 
 EL_CLASS(process) {
-	EL_IMPLEMENTS(process_cleanup, method);
+	EL_IMPLEMENTS(process_cleanup);
 
 	pid_t pid;
 	void* private;

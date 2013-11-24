@@ -186,7 +186,7 @@ cleanup_process (el_process_t process, int status)
 	xwayland_stop(process->private);
 }
 
-static el_process_cleanup_interface process_interface = {
+EL_IMPLEMENTATION(process_cleanup) {
 	.cleanup = cleanup_process
 };
 
@@ -278,7 +278,7 @@ xwayland_start (el_compositor_t compositor)
 
 			self->process.private = self;
 			self->process.pid     = pid;
-			self->process.method  = &process_interface;
+			self->process.method  = &process_cleanup;
 	}
 
 	return self;

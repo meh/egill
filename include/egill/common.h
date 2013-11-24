@@ -105,7 +105,32 @@ void el_resource_release (wl_client_t client, wl_resource_t resource);
 #define EL_SUPER(ptr) \
 	(&(ptr)->super)
 
-#define EL_IMPLEMENTS(name, as) \
-	el_##name##_i as
+#define EL_IMPLEMENTS(...) \
+	__el_implements(, ## __VA_ARGS__, \
+		__el_implements2(__VA_ARGS__), \
+		__el_implements1(__VA_ARGS__))
+
+#define __el_implements(_, _1, _2, selected, ...) \
+	selected
+
+#define __el_implements1(name) \
+	struct el_##name##_interface* method
+
+#define __el_implements2(name, as) \
+	struct el_##name##_interface* as
+
+#define EL_IMPLEMENTATION(...) \
+	__el_implementation(, ## __VA_ARGS__, \
+		__el_implementation2(__VA_ARGS__), \
+		__el_implementation1(__VA_ARGS__))
+
+#define __el_implementation(_, _1, _2, selected, ...) \
+	selected
+
+#define __el_implementation1(name) \
+	static struct el_##name##_interface name =
+
+#define __el_implementation2(name, as) \
+	static struct el_##name##_interface as =
 
 #endif
