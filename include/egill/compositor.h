@@ -34,7 +34,7 @@ EL_ENUM(compositor_capability) {
 	EL_CAPABILITY_CAPTURE_YFLIP = 1 << 1,
 };
 
-EL_OBJECT(compositor) {
+EL_CLASS(compositor) {
 	const char*     socket;
 	wl_display_t    display;
 	wl_event_loop_t loop;
@@ -52,7 +52,9 @@ EL_OBJECT(compositor) {
  * backend, register a renderer and finally run the compositor.
  *
  * \param socket the name of the socket, if NULL "wayland-0" will be used
+ *
  * \return a new compositor instance
+ *
  * \memberof el_compositor_t
  */
 el_compositor_t el_compositor_create (const char* socket);

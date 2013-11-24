@@ -1,3 +1,22 @@
+/**
+ * 2013 (ɔ) meh. [http://meh.schizfreni.co | meh@schizofreni.co]
+ *
+ * This file is part of egill
+ *
+ * Parsepples is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Parsepples is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with egill. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef EGILL_COMMON_H
 #define EGILL_COMMON_H
 
@@ -42,8 +61,8 @@
 void* el_malloc (size_t size);
 
 #define el_create(type) ({ \
-	type##_t pointer = el_malloc(sizeof(struct type)); \
-	memset(pointer, 0, sizeof(struct type)); \
+	el_##type##_t pointer = el_malloc(sizeof(struct el_##type)); \
+	memset(pointer, 0, sizeof(struct el_##type)); \
 	pointer; \
 })
 
@@ -65,19 +84,28 @@ void el_resource_unbind (wl_resource_t resource);
 
 void el_resource_release (wl_client_t client, wl_resource_t resource);
 
-#define EL_OBJECT(name) \
+#define EL_CLASS(name) \
 	typedef struct el_##name el_##name; \
-	typedef el_##name* el_##name##_t; \
+	typedef struct el_##name* el_##name##_t; \
 	struct el_##name
 
 #define EL_ENUM(name) \
 	typedef enum el_##name el_##name; \
-	typedef el_##name el_##name##_e; \
+	typedef enum el_##name el_##name##_e; \
 	enum el_##name
 
 #define EL_INTERFACE(name) \
-	typedef struct el_##name el_##name##_interface; \
-	typedef el_##name* el_##name##_i; \
-	struct el_##name##_interface \
+	typedef struct el_##name##_interface el_##name##_interface; \
+	typedef struct el_##name##_interface* el_##name##_i; \
+	struct el_##name##_interface
+
+#define EL_INHERIT(name) \
+	struct el_##name super
+
+#define EL_SUPER(ptr) \
+	(&(ptr)->super)
+
+#define EL_IMPLEMENTS(name, as) \
+	el_##name##_i as
 
 #endif

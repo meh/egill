@@ -22,7 +22,7 @@
 
 #include <egill/common.h>
 
-EL_OBJECT(output_mode) {
+EL_CLASS(output_mode) {
 	uint32_t flags;
 
 	int32_t width;
@@ -40,7 +40,7 @@ EL_ENUM(dpms) {
 	EL_DPMS_OFF
 };
 
-EL_OBJECT(output) {
+EL_CLASS(output) {
 	uint32_t    id;
 	const char* name;
 

@@ -22,7 +22,7 @@
 
 #include <egill/compositor.h>
 
-EL_OBJECT(renderer) {
+EL_CLASS(renderer) {
 	const char*     name;
 	el_compositor_t compositor;
 };
