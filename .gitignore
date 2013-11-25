@@ -1,6 +1,9 @@
-*.o
 .config
 mkmf.log
+
 libegill.so
 libegill-static.so
 test
+
+source/*.o
+protocol/*.h

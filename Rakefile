@@ -2,9 +2,18 @@ require 'rake'
 require 'rake/clean'
 require 'mkmf'
 
+def executable(name)
+	path = ENV['PATH'].split(?:).find {|p|
+		File.executable? "#{p}/#{name}"
+	}
+
+	"#{path}/#{name}"
+end
+
 CC      = ENV['CC'] || 'clang'
 AR      = ENV['AR'] || 'ar'
-CFLAGS  = "-Wall -Wextra -Iinclude -std=c11 #{`pkg-config pixman-1 --cflags`.chomp} #{ENV['CFLAGS']}"
+SCANNER = ENV['SCANNER'] || executable('wayland-scanner') || abort("could not find wayland-scanner")
+CFLAGS  = "-Wall -Wextra -Iinclude -Iprotocol -std=c11 #{`pkg-config pixman-1 --cflags`.chomp} #{ENV['CFLAGS']}"
 LDFLAGS = "-lwayland-server -lxkbcommon #{`pkg-config pixman-1 --libs`.chomp} #{ENV['LDFLAGS']}"
 
 unless File.exists? '.config'
@@ -49,15 +58,9 @@ SOURCES = FileList['source/*.c', 'source/data/*.c']
 	end
 }
 
-ENV['PATH'].split(?:).each {|path|
-	bin = "#{path}/X"
-
-	if File.executable?(bin)
-		CFLAGS << " -DXWAYLAND_PATH='#{bin.inspect}'"
-
-		break
-	end
-}
+if bin = executable('X')
+	CFLAGS << " -DXWAYLAND_PATH='#{bin.inspect}'"
+end
 
 if ENV['type'] == 'debug'
 	CFLAGS << " -g -O0"
@@ -66,9 +69,10 @@ else
 	LDFLAGS << " -Wl,-O1"
 end
 
-OBJECTS = SOURCES.existing.ext('o')
+OBJECTS   = SOURCES.existing.ext('o')
+PROTOCOLS = FileList['protocol/*.xml'].ext('.h')
 
-CLEAN.include(OBJECTS.existing)
+CLEAN.include(OBJECTS.existing, PROTOCOLS.existing)
 CLOBBER.include(FileList['.config', 'libegill.so', 'libegill-static.a'].existing)
 
 task :default => ["libegill.so", "libegill-static.a"]
@@ -77,11 +81,15 @@ rule '.o' => '.c' do |t|
 	sh "#{CC} #{CFLAGS} -fPIC -o #{t.name} -c #{t.source}"
 end
 
-file "libegill.so" => OBJECTS do
+rule '.h' => '.xml' do |t|
+	sh "cat #{t.source} | #{SCANNER} server-header > #{t.name}"
+end
+
+file "libegill.so" => PROTOCOLS + OBJECTS do
 	sh "#{CC} #{CFLAGS} #{OBJECTS} -shared -Wl,-soname,libegill.so -o libegill.so #{LDFLAGS}"
 end
 
-file "libegill-static.a" => OBJECTS do
+file "libegill-static.a" => PROTOCOLS + OBJECTS do
 	sh "#{AR} rcs libegill-static.a #{OBJECTS}"
 end
 
