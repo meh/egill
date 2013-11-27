@@ -20,6 +20,36 @@
 #include <egill/backend/x11.h>
 
 static void
+create_output (el_backend_x11_t backend, int x, int y, int width, int height,
+               bool fullscreen, char* name, uint32_t transform, int32_t scale)
+{
+	uint32_t mask     = XCB_CW_EVENT_MASK | XCB_CW_CURSOR;
+	uint32_t values[] = {
+		XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_STRUCTURE_NOTIFY,
+		0
+	};
+
+	xcb_screen_iterator_t iter = xcb_setup_roots_iterator(
+		xcb_get_setup(backend->connection));
+
+	xcb_screen_t* screen = iter.data;
+	xcb_window_t  window = xcb_generate_id(backend->connection);
+
+	xcb_create_window(backend->connection, XCB_COPY_FROM_PARENT, window,
+		screen->root, x, y, width, height, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT,
+		screen->root_visual, mask, values);
+
+	xcb_map_window(backend->connection, window);
+	xcb_flush(backend->connection);
+}
+
+static bool
+create_input (el_backend_x11_t backend)
+{
+	return true;
+}
+
+static void
 get_resources (el_backend_x11_t self)
 {
 	#define F(field) offsetof(struct el_backend_x11, field)
@@ -106,7 +136,8 @@ get_wm_info (el_backend_x11_t self)
 WL_EXPORT el_backend_t
 el_backend_x11_create (el_compositor_t compositor, va_list args)
 {
-	const char* name;
+	const char* name       = NULL;
+	const char* display    = NULL;
 	      bool  fullscreen = false;
 	      int   width      = 1024;
 	      int   height     = 640;
@@ -121,6 +152,9 @@ el_backend_x11_create (el_compositor_t compositor, va_list args)
 		else if (strcmp(name, "height") == 0) {
 			height = va_arg(args, int);
 		}
+		else if (strcmp(name, "display") == 0) {
+			display = va_arg(args, const char*);
+		}
 		else {
 			return NULL;
 		}
@@ -131,7 +165,7 @@ el_backend_x11_create (el_compositor_t compositor, va_list args)
 	EL_SUPER(self)->name       = "x11";
 	EL_SUPER(self)->compositor = compositor;
 
-	self->connection = xcb_connect(NULL, NULL);
+	self->connection = xcb_connect(display, NULL);
 
 	if (xcb_connection_has_error(self->connection)) {
 		goto fail;
