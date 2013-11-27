@@ -62,7 +62,7 @@ if bin = executable('X')
 	CFLAGS << " -DXWAYLAND_PATH='#{bin.inspect}'"
 end
 
-if ENV['type'] == 'debug'
+if ENV['debug']
 	CFLAGS << " -g -O0"
 else
 	CFLAGS  << " -Os"
@@ -75,7 +75,9 @@ PROTOCOLS = FileList['protocol/*.xml'].ext('.h')
 CLEAN.include(OBJECTS.existing, PROTOCOLS.existing)
 CLOBBER.include(FileList['.config', 'libegill.so', 'libegill-static.a'].existing)
 
-task :default => ["libegill.so", "libegill-static.a"]
+task :default => :build
+
+task :build => ["libegill.so", "libegill-static.a"]
 
 rule '.o' => '.c' do |t|
 	sh "#{CC} #{CFLAGS} -fPIC -o #{t.name} -c #{t.source}"
@@ -83,6 +85,7 @@ end
 
 rule '.h' => '.xml' do |t|
 	sh "cat #{t.source} | #{SCANNER} server-header > #{t.name}"
+	sh "cat #{t.source} | #{SCANNER} code >> #{t.name}"
 end
 
 file "libegill.so" => PROTOCOLS + OBJECTS do
@@ -95,7 +98,9 @@ end
 
 CLOBBER.include(FileList['test'].existing)
 
-task :example => 'libegill.so' do
-	sh "#{CC} #{CFLAGS} -L. -legill -Iinclude example/test.c -o test"
-	sh "LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ./test"
+namespace :example do
+	task :test => 'libegill.so' do
+		sh "#{CC} #{CFLAGS} -L. -legill -Iinclude examples/test.c -o test"
+		sh "LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ./test"
+	end
 end
