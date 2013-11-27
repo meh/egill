@@ -133,4 +133,7 @@ void el_resource_release (wl_client_t client, wl_resource_t resource);
 #define __el_implementation2(name, as) \
 	static struct el_##name##_interface as =
 
+#define WL_IMPLEMENTATION(name) \
+	const struct name##_interface name##_implementation =
+
 #endif
