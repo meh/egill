@@ -65,8 +65,8 @@ el_compositor_destroy (el_compositor_t self)
 		wl_display_destroy(self->display);
 	}
 
-	if (self->xwayland) {
-		xwayland_stop(self->xwayland);
+	if (self->x) {
+		el_x_stop(self->x);
 	}
 
 	el_destroy(self);
@@ -110,6 +110,12 @@ el_compositor_define_backend (el_compositor_t self, const char* name, ...)
 	return true;
 }
 
+WL_EXPORT void
+el_compositor_start_x (el_compositor_t self)
+{
+	self->x = el_x_start(self);
+}
+
 WL_EXPORT bool
 el_compositor_run (el_compositor_t self)
 {
@@ -126,12 +132,6 @@ el_compositor_run (el_compositor_t self)
 	}
 
 	setenv("WAYLAND_DISPLAY", self->socket, 1);
-
-	self->xwayland = xwayland_start(self);
-
-	if (!self->xwayland) {
-		return false;
-	}
 
 	wl_display_run(self->display);
 

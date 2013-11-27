@@ -17,19 +17,35 @@
  * along with egill. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef EGILL_XWAYLAND_H
-#define EGILL_XWAYLAND_H
+#ifndef EGILL_X_H
+#define EGILL_X_H
 
 #include <egill/common.h>
 #include <egill/process.h>
 
 EL_CLASS(compositor);
 
-EL_CLASS(xwayland) {
+EL_CLASS(x_window_manager) {
+
+};
+
+EL_CLASS(x) {
 	el_compositor_t compositor;
 
 	int   display;
 	char* lock;
+
+	el_x_window_manager_t window_manager;
+
+	struct {
+		int               fd;
+		wl_event_source_t source;
+	} abstract;
+
+	struct {
+		int               fd;
+		wl_event_source_t source;
+	} unix;
 	
 	struct {
 		int abstract;
@@ -44,11 +60,13 @@ EL_CLASS(xwayland) {
 /*!
  * Start X with Wayland support.
  */
-el_xwayland_t xwayland_start (el_compositor_t compositor);
+el_x_t el_x_start (el_compositor_t compositor);
 
 /*!
  * Stop the started X server.
  */
-void xwayland_stop (el_xwayland_t);
+void el_x_stop (el_x_t);
+
+el_x_window_manager_t el_x_window_manager_create (el_x_t server);
 
 #endif

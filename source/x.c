@@ -17,8 +17,10 @@
  * along with egill. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <egill/xwayland.h>
+#include <egill/x.h>
 #include <egill/compositor.h>
+
+#include "xserver.h"
 
 #include <stdio.h>
 #include <signal.h>
@@ -29,6 +31,16 @@
 #ifndef XWAYLAND_PATH
 #define XWAYLAND_PATH "/usr/bin/X"
 #endif
+
+static void
+set_window_id (wl_client_t client, wl_resource_t resource,
+               wl_resource_t surface_resource, uint32_t id)
+{
+}
+
+WL_IMPLEMENTATION(xserver) {
+	set_window_id
+};
 
 static const char*
 get_path (void)
@@ -179,25 +191,45 @@ fail:
 }
 
 static void
+bind_server (wl_client_t client, void* data, uint32_t version, uint32_t id)
+{
+	(void) version;
+
+	el_x_t x = data;
+
+	if (client != x->client) {
+		return;
+	}
+
+	x->resource = wl_resource_create(client, &xserver_interface, 1, id);
+	wl_resource_set_implementation(x->resource, &xserver_implementation, x, NULL);
+
+	x->window_manager = el_x_window_manager_create(x);
+
+	xserver_send_listen_socket(x->resource, x->abstract.fd);
+	xserver_send_listen_socket(x->resource, x->unix.fd);
+}
+
+static void
 cleanup_process (el_process_t process, int status)
 {
 	(void) status;
 
-	xwayland_stop(process->private);
+	el_x_stop(process->private);
 }
 
 EL_IMPLEMENTATION(process_cleanup) {
 	.cleanup = cleanup_process
 };
 
-WL_EXPORT el_xwayland_t
-xwayland_start (el_compositor_t compositor)
+WL_EXPORT el_x_t
+el_x_start (el_compositor_t compositor)
 {
-	el_xwayland_t self = el_create(xwayland);
+	el_x_t self = el_create(x);
 
 	self->compositor  = compositor;
-	self->fd.abstract = -1;
-	self->fd.unix     = -1;
+	self->abstract.fd = -1;
+	self->unix.fd     = -1;
 
 	do {
 		int   display = 0;
@@ -209,9 +241,9 @@ xwayland_start (el_compositor_t compositor)
 			goto fail;
 		}
 
-		self->fd.abstract = bind_to_abstract_socket(display);
+		self->abstract.fd = bind_to_abstract_socket(display);
 
-		if (self->fd.abstract < 0) {
+		if (self->abstract.fd < 0) {
 			unlink(lock);
 
 			if (errno == EADDRINUSE) {
@@ -223,11 +255,11 @@ xwayland_start (el_compositor_t compositor)
 			}
 		}
 
-		self->fd.unix = bind_to_unix_socket(display);
+		self->unix.fd = bind_to_unix_socket(display);
 
-		if (self->fd.unix < 0) {
+		if (self->unix.fd < 0) {
 			unlink(lock);
-			close(self->fd.abstract);
+			close(self->abstract.fd);
 
 			return NULL;
 		}
@@ -281,28 +313,31 @@ xwayland_start (el_compositor_t compositor)
 			self->process.method  = &process_cleanup;
 	}
 
+	wl_global_create(compositor->display, &xserver_interface, 1, self,
+		bind_server);
+
 	return self;
 
 fail:
-	xwayland_stop(self);
+	el_x_stop(self);
 
 	return NULL;
 }
 
 WL_EXPORT void
-xwayland_stop (el_xwayland_t self)
+el_x_stop (el_x_t self)
 {
 	if (self->lock) {
 		unlink(self->lock);
 		free(self->lock);
 	}
 
-	if (self->fd.abstract >= 0) {
-		close(self->fd.abstract);
+	if (self->abstract.fd >= 0) {
+		close(self->abstract.fd);
 	}
 
-	if (self->fd.unix >= 0) {
-		close(self->fd.unix);
+	if (self->unix.fd >= 0) {
+		close(self->unix.fd);
 	}
 
 	el_destroy(self);

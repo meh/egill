@@ -21,8 +21,11 @@
 #define EGILL_COMPOSITOR_H
 
 #include <egill/common.h>
-#include <egill/xwayland.h>
+#include <egill/x.h>
 #include <egill/process.h>
+
+EL_CLASS(renderer);
+EL_CLASS(backend);
 
 EL_ENUM(compositor_state) {
 	EL_COMPOSITOR_ACTIVE,
@@ -41,12 +44,12 @@ EL_CLASS(compositor) {
 	wl_display_t    display;
 	wl_event_loop_t loop;
 
-	struct el_renderer* renderer;
-	struct el_backend*  backend;
+
+	el_renderer_t renderer;
+	el_backend_t  backend;
+	el_x_t        x;
 
 	el_compositor_state_e state;
-
-	el_xwayland_t xwayland;
 
 	wl_list processes;
 };
@@ -85,9 +88,17 @@ bool el_compositor_define_renderer (el_compositor_t self, const char* name, ...)
  * Create and set the backend to use in the compositor.
  *
  * \return true when the creation was successful, false otherwise
+ *
  * \memberof el_compositor_t
  */
 bool el_compositor_define_backend (el_compositor_t self, const char* name, ...);
+
+/*!
+ * Start the X server for X client support.
+ *
+ * \memberof el_compositor_t
+ */
+void el_compositor_start_x (el_compositor_t self);
 
 /*!
  * Run the compositor, this function will block and run the event loop.
