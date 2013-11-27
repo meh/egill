@@ -22,18 +22,15 @@
 
 #include <stdbool.h>
 
-struct el_backend;
-struct el_renderer;
-struct el_compositor;
-
 typedef struct el_backend*    el_backend_t;
 typedef struct el_renderer*   el_renderer_t;
 typedef struct el_compositor* el_compositor_t;
 
-el_compositor_t el_compositor_create (const char* socket);
-void el_compositor_destroy (el_compositor_t self);
-bool el_compositor_define_renderer (el_compositor_t self, const char* name, ...);
-bool el_compositor_define_backend (el_compositor_t self, const char* name, ...);
-bool el_compositor_run (el_compositor_t self);
+el_compositor_t el_compositor_create (const char*);
+void el_compositor_destroy (el_compositor_t);
+bool el_compositor_define_renderer (el_compositor_t, const char*, ...);
+bool el_compositor_define_backend (el_compositor_t, const char*, ...);
+void el_compositor_start_x (el_compositor_t);
+bool el_compositor_run (el_compositor_t);
 
 #endif
