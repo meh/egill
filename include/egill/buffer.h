@@ -48,6 +48,10 @@ EL_CLASS(buffer_reference) {
 	} destroy;
 };
 
+el_buffer_t el_buffer_from_resource (wl_resource_t resource);
+
+void el_buffer_destroy (el_buffer_t self);
+
 void el_buffer_point (el_buffer_reference_t self, el_buffer_t buffer);
 
 #endif

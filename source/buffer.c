@@ -20,9 +20,48 @@
 #include <egill/buffer.h>
 
 static void
-handle_destroy (wl_listener_t listener, void* data)
+buffer_handle_destroy (wl_listener_t listener, void* data)
 {
-	el_buffer_reference_t self = containerof(listener, el_buffer_reference,
+	(void) data;
+
+	el_buffer_destroy(containerof(listener, buffer, destroy.listener));
+}
+
+WL_EXPORT el_buffer_t
+el_buffer_from_resource (wl_resource_t resource)
+{
+	wl_listener_t listener = wl_resource_get_destroy_listener(resource,
+		buffer_handle_destroy);
+
+	if (listener) {
+		return containerof(listener, buffer, destroy.listener);
+	}
+
+	el_buffer_t self = el_create(buffer);
+
+	self->resource = resource;
+
+	wl_signal_init(&self->destroy.signal);
+	self->destroy.listener.notify = buffer_handle_destroy;
+
+	self->inverted = true;
+	wl_resource_add_destroy_listener(resource, &self->destroy.listener);
+
+	return self;
+}
+
+WL_EXPORT void
+el_buffer_destroy (el_buffer_t self)
+{
+	wl_signal_emit(&self->destroy.signal, self);
+
+	el_destroy(self);
+}
+
+static void
+reference_handle_destroy (wl_listener_t listener, void* data)
+{
+	el_buffer_reference_t self = containerof(listener, buffer_reference,
 		destroy.listener);
 
 	assert(data == self->buffer);
@@ -30,7 +69,7 @@ handle_destroy (wl_listener_t listener, void* data)
 	self->buffer = NULL;
 }
 
-void
+WL_EXPORT void
 el_buffer_point (el_buffer_reference_t self, el_buffer_t buffer)
 {
 	if (self->buffer && buffer != self->buffer) {
@@ -52,6 +91,5 @@ el_buffer_point (el_buffer_reference_t self, el_buffer_t buffer)
 	}
 
 	self->buffer                  = buffer;
-	self->destroy.listener.notify = handle_destroy;
+	self->destroy.listener.notify = reference_handle_destroy;
 }
-
