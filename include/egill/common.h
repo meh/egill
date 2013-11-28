@@ -54,8 +54,8 @@
 })
 
 #define containerof(ptr, type, member) ({ \
-	const __typeof__(((type##_t) 0)->member)* __mptr = (ptr); \
-	(type##_t) ((char*) __mptr - offsetof(struct type, member)); \
+	const __typeof__(((el_##type##_t) 0)->member)* __mptr = (ptr); \
+	(el_##type##_t) ((char*) __mptr - offsetof(struct el_##type, member)); \
 })
 
 void* el_malloc (size_t size);
